@@ -5,18 +5,17 @@ const mapDBAlbumToModel = ({ id, name, year }) => ({
 });
 
 const mapDBAlbumSongToModel = (rows) => {
-  const songs = rows.map(({ song_id, title, performer }) => ({
-    id: song_id,
-    title,
-    performer,
-  }));
+  const { id, name, year } = rows[0];
 
-  return {
-    id: rows[0].id,
-    name: rows[0].name,
-    year: rows[0].year,
-    songs: songs[0].id !== null ? songs : [],
-  };
+  const songs = rows
+    .filter(({ title }) => title !== null)
+    .map(({ songId, title, performer }) => ({
+      id: songId,
+      title,
+      performer,
+    }));
+
+  return { id, name, year, songs };
 };
 
 const mapDBSongToModel = ({ id, title, performer }) => ({
