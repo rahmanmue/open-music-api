@@ -9,7 +9,7 @@ export default [
   pluginJs.configs.recommended,
   {
     rules: {
-      linebreakStyle: ['error', 'windows'],
+      'linebreak-style': 'off',
       camelcase: ['error', { allow: ['created_at', 'updated_at'] }],
     },
   },
