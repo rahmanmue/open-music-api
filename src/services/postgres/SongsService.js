@@ -30,11 +30,11 @@ class SongsService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Song tidak ditemukan');
     }
 
-    return result.rows.map(mapDBSongsToModel)[0];
+    return mapDBSongsToModel(result.rows[0]);
   }
 
   async addSong({ title, year, performer, genre, duration, albumId }) {
