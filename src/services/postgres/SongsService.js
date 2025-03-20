@@ -12,8 +12,8 @@ class SongsService {
   async getSongs({ title, performer }) {
     const operator = title && performer ? 'AND' : 'OR';
     const querySearch = {
-      text: `SELECT * FROM songs WHERE title ILike '%' || $1 || '%' ${operator} performer ILike '%' || $2 || '%'`,
-      values: [title, performer],
+      text: `SELECT * FROM songs WHERE title ILike $1 ${operator} performer ILike $2`,
+      values: [`%${title}%`, `%${performer}%`],
     };
 
     const query = title || performer ? querySearch : 'SELECT * FROM songs';
@@ -79,7 +79,7 @@ class SongsService {
 
     if (albumId) {
       query = {
-        text: 'UPDATE songs SET title = $1, year = $2, performer = $3, genre= $4, duration= $5, albumId = $6, updated_at = $7 WHERE id = $8 RETURNING id',
+        text: 'UPDATE songs SET title = $1, year = $2, performer = $3, genre= $4, duration= $5, album_id = $6, updated_at = $7 WHERE id = $8 RETURNING id',
         values: [
           title,
           year,
@@ -110,6 +110,17 @@ class SongsService {
 
     if (!result.rows.length) {
       throw new NotFoundError('Song gagal dihapus. Id tidak ditemukan');
+    }
+  }
+
+  async verifySong(id) {
+    const song = await this._pool.query({
+      text: 'SELECT * FROM songs WHERE id = $1',
+      values: [id],
+    });
+
+    if (!song.rowCount) {
+      throw new NotFoundError('Song tidak ditemukan');
     }
   }
 }
