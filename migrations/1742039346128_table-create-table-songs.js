@@ -23,7 +23,8 @@ exports.up = (pgm) => {
     duration: {
       type: 'integer',
     },
-    albumId: {
+    // eslint-disable-next-line camelcase
+    album_id: {
       type: 'varchar(50)',
       references: '"albums"',
       onDelete: 'CASCADE',
@@ -37,7 +38,7 @@ exports.up = (pgm) => {
       notNull: true,
     },
   });
-  pgm.createIndex('songs', 'albumId');
+  pgm.createIndex('songs', 'album_id');
 };
 
 exports.down = (pgm) => {
