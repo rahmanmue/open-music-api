@@ -48,23 +48,20 @@ const mapDBPlaylistsToModel = ({ playlistId, name, username }) => ({
 });
 
 const mapDBPlaylistSongsToModel = (rows) => {
-  const { id, name, username } = rows[0];
+  const { playlistId, name, username } = rows[0];
 
   const songs = rows
     .filter(({ title }) => title !== null)
-    // eslint-disable-next-line camelcase
-    .map(({ song_id, title, performer }) => ({
-      // eslint-disable-next-line camelcase
-      id: song_id,
+    .map(({ songId, title, performer }) => ({
+      id: songId,
       title,
       performer,
     }));
 
-  return { id, name, username, songs };
+  return { id: playlistId, name, username, songs };
 };
 
 const mapDBPlaylistActivitiesToModel = (rows) => {
-  console.log(rows);
   const { playlistId } = rows[0];
   const activities = rows.map(({ username, title, action, time }) => ({
     username,

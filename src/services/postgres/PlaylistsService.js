@@ -11,22 +11,6 @@ class PlaylistsService {
     this._collaborationService = collaborationsService;
   }
 
-  async verifyPlaylistSongAccess(playlistId, userId) {
-    try {
-      await this.verifyPlaylistOwner(playlistId, userId);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw error;
-      }
-      // jika bukan owner tetap dieksekusi
-      try {
-        await this._collaborationService.verifyCollaborator(playlistId, userId);
-      } catch {
-        throw error;
-      }
-    }
-  }
-
   async verifyPlaylistOwner(id, owner) {
     const query = {
       text: 'SELECT * FROM playlists WHERE id = $1',
@@ -41,6 +25,21 @@ class PlaylistsService {
     const playlist = result.rows[0];
     if (playlist.owner !== owner) {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  async verifyPlaylistSongAccess(playlistId, userId) {
+    try {
+      await this.verifyPlaylistOwner(playlistId, userId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      try {
+        await this._collaborationService.verifyCollaborator(playlistId, userId);
+      } catch {
+        throw error;
+      }
     }
   }
 
@@ -60,7 +59,8 @@ class PlaylistsService {
       text: `SELECT playlists.id AS "playlistId", playlists.name, playlists.owner, 
             users.id, users.username FROM playlists 
             LEFT JOIN users ON playlists.owner = users.id 
-            WHERE playlists.owner = $1`,
+            LEFT JOIN collaborations ON collaborations.playlist_id = playlists.id
+            WHERE playlists.owner = $1 OR collaborations.user_id = $1`,
       values: [owner],
     };
 
