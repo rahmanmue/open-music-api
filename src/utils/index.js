@@ -1,11 +1,12 @@
-const mapDBAlbumToModel = ({ id, name, year }) => ({
+const mapDBAlbumToModel = ({ id, name, year, cover }) => ({
   id,
   name,
   year,
+  coverUrl: cover,
 });
 
 const mapDBAlbumSongToModel = (rows) => {
-  const { id, name, year } = rows[0];
+  const { id, name, year, cover } = rows[0];
 
   const songs = rows
     .filter(({ title }) => title !== null)
@@ -15,7 +16,7 @@ const mapDBAlbumSongToModel = (rows) => {
       performer,
     }));
 
-  return { id, name, year, songs };
+  return { id, name, year, coverUrl: cover, songs };
 };
 
 const mapDBSongToModel = ({ id, title, performer }) => ({
