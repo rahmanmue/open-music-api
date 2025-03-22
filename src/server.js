@@ -2,6 +2,7 @@ require('dotenv').config();
 const Hapi = require('@hapi/hapi');
 const ClientError = require('./exceptions/ClientError');
 const Jwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
 
 //albums
 const albums = require('./api/albums');
@@ -38,11 +39,27 @@ const PlaylistsService = require('./services/postgres/PlaylistsService');
 const PlaylistsValidator = require('./validator/playlists');
 
 // playlist-songs
-// eslint-disable-next-line camelcase
 const playlistSongs = require('./api/playlist-songs');
 const PlaylistSongsService = require('./services/postgres/PlaylistSongsService');
 
+// exports
+const _exports = require('./api/exports');
+const ProducerService = require('./services/rabbitmq/ProducerService');
+const ExportsValidator = require('./validator/exports');
+
+// uploads
+const uploads = require('./api/uploads');
+const StorageService = require('./services/storage/StorageServices');
+const UploadsValidator = require('./validator/uploads');
+
+// uploads
+const albumLikes = require('./api/user-album-likes');
+const AlbumLikesService = require('./services/postgres/AlbumLikesService');
+
+const CacheService = require('./services/redis/CacheService');
+
 const init = async () => {
+  const cacheService = new CacheService();
   const albumsService = new AlbumsService();
   const songsService = new SongsService();
   const usersService = new UsersService();
@@ -55,6 +72,8 @@ const init = async () => {
     playlistsService,
     playlistActivitiesService,
   );
+  const storageService = new StorageService();
+  const albumLikesService = new AlbumLikesService(albumsService, cacheService);
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -69,6 +88,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -135,12 +157,34 @@ const init = async () => {
       },
     },
     {
-      // eslint-disable-next-line camelcase
       plugin: playlistSongs,
       options: {
         playlistSongsService,
         playlistsService,
         validator: PlaylistsValidator,
+      },
+    },
+    {
+      plugin: _exports,
+      options: {
+        playlistsService,
+        service: ProducerService,
+        validator: ExportsValidator,
+      },
+    },
+    {
+      plugin: uploads,
+      options: {
+        albumsService,
+        service: storageService,
+        validator: UploadsValidator,
+      },
+    },
+    {
+      plugin: albumLikes,
+      options: {
+        service: albumLikesService,
+        validator: AlbumsValidator,
       },
     },
   ]);
@@ -163,6 +207,7 @@ const init = async () => {
       // mempertahankan penanganan client error oleh hapi secara native, seperti 404, etc.
       if (!response.isServer) {
         console.log('isServer: ', response.message);
+        console.log(response);
         return h.continue;
       }
 
