@@ -17,7 +17,7 @@ class AlbumsService {
   async getAlbumById(id) {
     //get with song
     const query = {
-      text: 'SELECT albums.id, albums.name, albums.year, songs.id as songId, songs.title, songs.performer  FROM albums LEFT JOIN songs ON songs.album_id = albums.id WHERE albums.id = $1',
+      text: 'SELECT albums.id, albums.name, albums.year, albums.cover, songs.id as songId, songs.title, songs.performer  FROM albums LEFT JOIN songs ON songs.album_id = albums.id WHERE albums.id = $1',
       values: [id],
     };
 
@@ -74,6 +74,42 @@ class AlbumsService {
 
     if (!result.rows.length) {
       throw new NotFoundError('Album gagal dihapus. Id tidak ditemukan');
+    }
+  }
+
+  async checkCoverAlbum(albumId) {
+    const query = {
+      text: 'SELECT id, cover FROM albums WHERE id= $1 AND cover IS NOT NULL',
+      values: [albumId],
+    };
+    const result = await this._pool.query(query);
+    return result.rows;
+  }
+
+  async updateAlbumCover(albumId, coverUrl) {
+    const updatedAt = new Date().toISOString();
+    const query = {
+      text: 'UPDATE albums SET cover = $1, updated_at = $2 WHERE id= $3 RETURNING id',
+      values: [coverUrl, updatedAt, albumId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Album tidak ditemukan');
+    }
+  }
+
+  async checkAlbums(albumId) {
+    const query = {
+      text: 'SELECT id FROM albums WHERE id = $1',
+      values: [albumId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Album tidak ditemukan');
     }
   }
 }

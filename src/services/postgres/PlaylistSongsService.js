@@ -22,6 +22,7 @@ class PlaylistSongsService {
   }
 
   async getPlaylistSongs(playlistId, owner) {
+    await this._playlistsService.verifyPlaylist(playlistId);
     const query = {
       text: `SELECT playlists.id AS "playlistId", playlists.name,
       users.id, users.username, songs.id AS "songId", songs.title, songs.performer
